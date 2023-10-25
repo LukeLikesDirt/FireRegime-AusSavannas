@@ -116,6 +116,7 @@ emmeans_carbon <- emmeans(m1_carbon, list(pairwise ~ treatment),
 # Pairwise differences
 pairwise_diff_carbon <- pairs(emmeans_carbon) %>%
   as_tibble()
+write_csv(pairwise_diff_carbon, "output/pairwise_diff_carbon.csv")
 
 # Estimated marginal means
 emmeans_data_carbon <- emmeans_carbon %>%
@@ -198,9 +199,76 @@ summary(m5_nitrogen)
 emmeans_nitrogen <- emmeans(m5_nitrogen, list(pairwise ~ treatment),
                             adjust ="tukey")
 
-### (6) Effect plots ###########################################################
+### (6) The effect of treatment on carbon to nitrogen ratio ####################
+
+m1_CN <- glmmTMB(C.N ~ treatment + (1 | block),
+                 data = data,
+                 family = gaussian())
+
+m2_CN <- glmmTMB(C.N ~ treatment + (1 | block/sample_id),
+                 data = data,
+                 family = gaussian())
+
+# Compare model performance
+compare_performance(m1_CN, m2_CN)
+
+# Model validation
+res_CN <- simulateResiduals(m1_CN)
+plot(res_CN)
+
+# Results
+summary(m1_CN)
+
+# Estimated marginal means
+emmeans_CN <- emmeans(m1_CN, list(pairwise ~ treatment),
+                      adjust ="tukey")
+
+# Pairwise differences
+pairwise_diff_CN <- pairs(emmeans_CN) %>%
+  as_tibble()
 
 
+# Estimated marginal means
+emmeans_data_CN <- emmeans_CN %>%
+  as.data.frame() %>%
+  slice(1:6) %>%
+  select(treatment, emmean, SE, df, lower.CL, upper.CL)
+
+### (7) The effect of treatment on pH ##########################################
+
+m1_pH <- glmmTMB(pH ~ treatment + (1 | block),
+                 data = data,
+                 family = gaussian())
+
+m2_pH <- glmmTMB(pH ~ treatment + (1 | block/sample_id),
+                 data = data,
+                 family = gaussian())
+
+# Compare model performance
+compare_performance(m1_pH, m2_pH)
+
+# Model validation
+res_pH <- simulateResiduals(m2_pH)
+plot(res_pH)
+
+# Results
+summary(m2_pH)
+
+# Estimated marginal means
+emmeans_pH <- emmeans(m2_pH, list(pairwise ~ treatment),
+                      adjust ="tukey")
+
+# Pairwise differences
+pairwise_diff_pH <- pairs(emmeans_pH) %>%
+  as_tibble()
+
+# Estimated marginal means
+emmeans_data_pH <- emmeans_pH %>%
+  as.data.frame() %>%
+  slice(1:6) %>%
+  select(treatment, emmean, SE, df, lower.CL, upper.CL)
+
+### (8) Effect plots ###########################################################
 
 # Carbon
 jitter_carbon <- data %>%
